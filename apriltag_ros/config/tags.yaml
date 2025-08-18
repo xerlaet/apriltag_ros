@@ -21,6 +21,31 @@
 #   ]
 standalone_tags:
   [
+    {id: 0, size: 0.04, name: 'TAG_0'}, # sized at 40mm
+    {id: 1, size: 0.04, name: 'TAG_1'},
+    {id: 2, size: 0.04, name: 'TAG_2'},
+    {id: 3, size: 0.04, name: 'TAG_3'},
+    {id: 4, size: 0.04, name: 'TAG_4'},
+    {id: 5, size: 0.04, name: 'TAG_5'},
+    {id: 6, size: 0.04, name: 'TAG_6'},
+    # {id: 7, size: 0.04, name: 'TAG_7'},
+    # {id: 8, size: 0.04, name: 'TAG_8'},
+    # {id: 9, size: 0.04, name: 'TAG_9'},
+    # {id: 10, size: 0.04, name: 'TAG_10'},
+    # {id: 11, size: 0.04, name: 'TAG_11'},
+    # {id: 12, size: 0.04, name: 'TAG_12'},
+    # {id: 13, size: 0.04, name: 'TAG_13'},
+    # {id: 14, size: 0.04, name: 'TAG_14'},
+    # {id: 15, size: 0.04, name: 'TAG_15'},
+    # {id: 16, size: 0.04, name: 'TAG_16'},
+    # {id: 17, size: 0.04, name: 'TAG_17'},
+    # {id: 18, size: 0.04, name: 'TAG_18'},
+    # {id: 19, size: 0.04, name: 'TAG_19'},
+    # {id: 20, size: 0.04, name: 'TAG_20'},
+    # {id: 21, size: 0.04, name: 'TAG_21'},
+    # {id: 22, size: 0.04, name: 'TAG_22'},
+    # {id: 23, size: 0.04, name: 'TAG_23'},
+    # {id: 24, size: 0.04, name: 'TAG_24'}
   ]
 # ## Tag bundle definitions
 # ### Remarks
