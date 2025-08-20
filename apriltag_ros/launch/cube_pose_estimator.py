@@ -5,7 +5,8 @@ import numpy as np
 import tf.transformations as tfs
 import tf2_ros
 from apriltag_ros.msg import AprilTagDetectionArray
-from geometry_msgs.msg import PoseStamped, TransformStamped
+from geometry_msgs.msg import PoseStamped, TransformStamped, Pose, Twist, Vector3
+from nav_msgs.msg import Odometry
 
 class CubePoseEstimator:
     def __init__(self):
@@ -16,6 +17,13 @@ class CubePoseEstimator:
         # tf broadcaster and pose publisher
         self.tf_broadcaster = tf2_ros.TransformBroadcaster()
         self.pose_publisher = rospy.Publisher('/cube_pose', PoseStamped, queue_size=10)
+        self.odom_pub = rospy.Publisher('/obj_odometry', Odometry, queue_size=10)
+
+        # state variables for velocity/acceleration calculation
+        self.last_time = None
+        self.last_pose_matrix = None
+        self.odom_parent_frame = "camera_color_optical_frame"
+        self.odom_child_frame = "cube"
 
         # subscribe to apriltag detections
         rospy.Subscriber('/tag_detections', AprilTagDetectionArray, self.detections_callback)
@@ -47,33 +55,21 @@ class CubePoseEstimator:
 
         return transforms
 
-    # convert from euler to quaternion: tfs.quaternion_from_euler(roll, pitch yaw, axes='sxyz')
-    # convert from quaternion to euler: tfs.euler_from_quaternion(quat, axes='sxyz')
-    # convert from quaternion to a rotation matrix: tfs.quaternion_matrix(quat)
-    # convert from rotation matrix to quaternion: tfs.quaternion_from_matrix(matrix)
-    # convert from translation matrix to translation vector: tfs.translation_from_matrix(matrix)
-
-    # combine two rotations: tfs.quaternion_multiply(q1, q2)
-    # combine two transformation matrices: np.dot(T1, T2)
-
-    # inverse of a rotation: tfs.quaternion_inverse(q)
-    # inverse of a transformation matrix: tfs.inverse_matrix(T)
-
     def detections_callback(self, msg):
         if not msg.detections:
             return
         
         if self.camera_frame is None:
             self.camera_frame = msg.detections[0].pose.header.frame_id
+            self.odom_parent_frame = self.camera_frame
             rospy.loginfo("locked camera frame to: %s", self.camera_frame)
 
         poses = []
-
         for detection in msg.detections:
             tag_id = detection.id[0]
 
             if tag_id not in self.tag_cube_transforms:
-                rospy.logwarn("Unknown tag ID: %d", tag_id)
+                #rospy.logwarn("Unknown tag ID: %d", tag_id)
                 continue
 
             # calculate tensor of the camera to tag transform
@@ -82,26 +78,75 @@ class CubePoseEstimator:
             T_camera_tag = tfs.quaternion_matrix([q.x, q.y, q.z, q.w])
             T_camera_tag[:3, 3] = [p.x, p.y, p.z]
 
-            trans = tfs.translation_from_matrix(T_camera_tag)
-            quat = tfs.quaternion_from_matrix(T_camera_tag)
-            self.publish_tf(trans, quat, self.camera_frame, "t_{}".format(tag_id))
+            # trans = tfs.translation_from_matrix(T_camera_tag)
+            # quat = tfs.quaternion_from_matrix(T_camera_tag)
+            # self.publish_tf(trans, quat, self.camera_frame, "t_{}".format(tag_id))
 
             # calculate tensor of the camera to cube transform
             T_tag_cube = self.tag_cube_transforms[tag_id]
             T_camera_cube = np.dot(T_camera_tag, T_tag_cube)
 
             poses.append(T_camera_cube) # append to list for averaging
-            trans = tfs.translation_from_matrix(T_camera_cube)
-            quat = tfs.quaternion_from_matrix(T_camera_cube)
-            self.publish_tf(trans, quat, self.camera_frame, "c_{}".format(tag_id))
+            # trans = tfs.translation_from_matrix(T_camera_cube)
+            # quat = tfs.quaternion_from_matrix(T_camera_cube)
+            # self.publish_tf(trans, quat, self.camera_frame, "c_{}".format(tag_id))
         
-        # calculate average position for the cube
+        # calculate average position for the cube from all visible tags
         T_camera_cube_avg = self.average_pose(poses)
         if T_camera_cube_avg is not None:
+            current_time = rospy.Time.now()
+
+            # extract pose from the final matrix
             trans = tfs.translation_from_matrix(T_camera_cube_avg)
             quat = tfs.quaternion_from_matrix(T_camera_cube_avg)
-            self.publish_tf(trans, quat, self.camera_frame, "avg")
+
+            # publish the pose
+            self.publish_tf(trans, quat, self.camera_frame, "cube_pos")
     
+            # calculate velocities
+            linear_vel = Vector3()
+            angular_vel = Vector3()
+            if self.last_time is not None and self.last_pose_matrix is not None:
+                dt = (current_time - self.last_time).to_sec()
+                if dt > 0:
+                    # calculate linear velocity
+                    last_trans = tfs.translation_from_matrix(self.last_pose_matrix)
+                    linear_vel.x = (trans[0] - last_trans[0]) / dt
+                    linear_vel.y = (trans[1] - last_trans[1]) / dt
+                    linear_vel.z = (trans[2] - last_trans[2]) / dt
+
+                    # calculate angular velocity
+                    T_last_inv = tfs.inverse_matrix(self.last_pose_matrix)
+                    T_rot_diff = np.dot(T_last_inv, T_camera_cube_avg)
+                    angle, axis, _ = tfs.rotation_from_matrix(T_rot_diff)
+
+                    angular_vel.x = axis[0] * angle / dt
+                    angular_vel.y = axis[1] * angle / dt
+                    angular_vel.z = axis[2] * angle / dt
+            
+            # assemble and publish the odometry message
+            odom_msg = Odometry()
+            odom_msg.header.stamp = current_time
+            odom_msg.header.frame_id = self.odom_parent_frame
+            odom_msg.child_frame_id = self.odom_child_frame
+
+            odom_msg.pose.pose.position.x = trans[0]
+            odom_msg.pose.pose.position.y = trans[1]
+            odom_msg.pose.pose.position.z = trans[2]
+            odom_msg.pose.pose.orientation.x = quat[0]
+            odom_msg.pose.pose.orientation.y = quat[1]
+            odom_msg.pose.pose.orientation.z = quat[2]
+            odom_msg.pose.pose.orientation.w = quat[3]
+
+            odom_msg.twist.twist.linear = linear_vel
+            odom_msg.twist.twist.angular = angular_vel
+
+            self.odom_pub.publish(odom_msg)
+
+            # update state
+            self.last_time = current_time
+            self.last_pose_matrix = T_camera_cube_avg
+
     def average_pose(self, poses):
         if not poses:
             return None
@@ -114,6 +159,12 @@ class CubePoseEstimator:
 
         # average the quaternions
         quaternions = [tfs.quaternion_from_matrix(p) for p in poses]
+
+        # ensure all quaternions are in the same hemisphere for stable averaging
+        for i in range(1, len(quaternions)):
+            if np.dot(quaternions[0], quaternions[i]) < 0:
+                quaternions[i] *= -1
+
         avg_quaternion = np.mean(quaternions, axis=0)
         avg_quaternion /= np.linalg.norm(avg_quaternion)  # normalize quaternion
 
