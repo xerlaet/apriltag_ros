@@ -1,9 +1,8 @@
 <launch>
-  <!-- <param name="emitter_enabled" value="0" /> -->
-  <!-- <param name="enable_auto_exposure" value="false" /> -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find leap_rl_control)/config/default.rviz" />
 
   <include file="$(find realsense2_camera)/launch/rs_camera.launch">
-    <arg name="json_file_path"    value="$(find apriltag_ros)/launch/camera_settings_d415.json"/>
+    <!-- <arg name="json_file_path"    value="$(find apriltag_ros)/launch/camera_settings_d415.json"/>
 
     <arg name="initial_reset"     value="true"/>
     <arg name="enable_color"      value="false"/>
@@ -19,7 +18,7 @@
     <arg name="enable_gyro"       value="false"/>
     <arg name="enable_sync"       value="false"/>
     <arg name="enable_pointcloud" value="false"/>
-    <arg name="align_depth"       value="false"/>
+    <arg name="align_depth"       value="false"/> -->
 
     <!-- <arg name="stereo_module/exposure/1" value="5000"/> -->
     <!-- <arg name="stereo_module/gain/1"     value="16"/> -->

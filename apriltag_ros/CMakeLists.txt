@@ -155,4 +155,8 @@ install(TARGETS
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 )
 
-install(PROGRAMS scripts/analyze_image DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(PROGRAMS
+  scripts/analyze_image
+  scripts/cube_pose_estimator.py
+  scripts/qr_broadcaster.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
