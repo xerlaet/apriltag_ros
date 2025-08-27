@@ -22,7 +22,7 @@ class CubePoseEstimator:
         # state variables for velocity/acceleration calculation
         self.last_time = None
         self.last_pose_matrix = None
-        self.odom_parent_frame = "camera_color_optical_frame"
+        # self.odom_parent_frame = "camera_color_optical_frame"
         self.odom_child_frame = "cube"
 
         # subscribe to apriltag detections
