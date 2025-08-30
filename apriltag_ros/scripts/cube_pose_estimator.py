@@ -115,14 +115,29 @@ class CubePoseEstimator:
                     linear_vel.y = (trans[1] - last_trans[1]) / dt
                     linear_vel.z = (trans[2] - last_trans[2]) / dt
 
-                    # calculate angular velocity
-                    T_last_inv = tfs.inverse_matrix(self.last_pose_matrix)
-                    T_rot_diff = np.dot(T_last_inv, T_camera_cube_avg)
-                    angle, axis, _ = tfs.rotation_from_matrix(T_rot_diff)
+                    # # calculate angular velocity
+                    # T_last_inv = tfs.inverse_matrix(self.last_pose_matrix)
+                    # T_rot_diff = np.dot(T_last_inv, T_camera_cube_avg)
+                    # angle, axis, _ = tfs.rotation_from_matrix(T_rot_diff)
 
-                    angular_vel.x = axis[0] * angle / dt
-                    angular_vel.y = axis[1] * angle / dt
-                    angular_vel.z = axis[2] * angle / dt
+                    # angular_vel_vec = (axis * angle) / dt  # In last cube's frame
+                    # R_camera_last = self.last_pose_matrix[:3, :3]  # Rotation from last cube to camera
+                    # angular_vel_camera = R_camera_last @ angular_vel_vec  # Transform to camera frame
+                    
+                    R1 = self.last_pose_matrix[:3,:3]
+                    R2 = T_camera_cube_avg[:3,:3]
+                    angular_vel_camera = self.angular_velocity_from_rotation_matrices(R1, R2, dt)
+                    # angular_vel_camera = R2 @ angular_vel_camera  # Transform to camera frame
+
+                    angular_vel.x = angular_vel_camera[0]
+                    angular_vel.y = angular_vel_camera[1]
+                    angular_vel.z = angular_vel_camera[2]
+
+                    # angular_vel.x = axis[0] * angle / dt
+                    # angular_vel.y = axis[1] * angle / dt
+                    # angular_vel.z = axis[2] * angle / dt
+            
+            # angular_vel = T_camera_cube_avg[:3,:3] @ angular_vel
             
             # assemble and publish the odometry message
             odom_msg = Odometry()
@@ -145,7 +160,7 @@ class CubePoseEstimator:
 
             # update state
             self.last_time = current_time
-            self.last_pose_matrix = T_camera_cube_avg
+            self.last_pose_matrix = T_camera_cube_avg.copy()
 
     def average_pose(self, poses):
         if not poses:
@@ -200,6 +215,30 @@ class CubePoseEstimator:
         p.pose.orientation.w = quat[3]
         self.pose_publisher.publish(p)
 
+    # Functionality: Calculate angular velocity from two rotation matrices and time difference
+    # Input: R1 (rotation matrix at t1), R2 (rotation matrix at t2), dt (time difference)
+    # Output: Angular velocity vector (rad/s) in the reference frame
+    def angular_velocity_from_rotation_matrices(self, R1, R2, dt):
+        # Compute relative rotation matrix
+        R_rel = R2 @ R1.T
+        # Compute rotation angle
+        trace = np.trace(R_rel)
+        cos_theta = (trace - 1) / 2
+        cos_theta = np.clip(cos_theta, -1, 1)  # Handle numerical errors
+        theta = np.arccos(cos_theta)
+        # Compute rotation axis
+        if np.abs(np.sin(theta)) > 1e-6:  # Avoid division by zero
+            n = (1 / (2 * np.sin(theta))) * np.array([
+                R_rel[2, 1] - R_rel[1, 2],
+                R_rel[0, 2] - R_rel[2, 0],
+                R_rel[1, 0] - R_rel[0, 1]
+            ])
+        else:
+            n = np.zeros(3)  # No rotation
+        # Compute angular velocity
+        omega = (theta / dt) * n
+        return omega# Example usage
+    
 if __name__ == "__main__":
     try:
         CubePoseEstimator()
