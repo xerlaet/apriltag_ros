@@ -10,7 +10,7 @@ class BasePublisher():
         self.camera_frame = None
 
         self.pub = tf2_ros.TransformBroadcaster()
-        self.sub = rospy.Subscriber('/tag_detections', AprilTagDetectionArray, self.detection_callback)
+        self.sub = rospy.Subscriber('/tag_detections', AprilTagDetectionArray, self.detection_callback, queue_size=1)
 
         # logs
         rospy.loginfo("base pose estimator node initialized")

@@ -12,8 +12,8 @@ class CubePublisher():
         self.tag_cube_transforms = self.initialize_transforms()
         self.camera_frame = None
         
-        self.pub = rospy.Publisher('/obj_odometry', Odometry, queue_size=10)
-        self.sub = rospy.Subscriber('/tag_detections', AprilTagDetectionArray, self.detections_callback)
+        self.pub = rospy.Publisher('/obj_odometry', Odometry, queue_size=1)
+        self.sub = rospy.Subscriber('/tag_detections', AprilTagDetectionArray, self.detections_callback, queue_size=1)
 
         # state variables for cube velocity calculation
         self.last_time = None
