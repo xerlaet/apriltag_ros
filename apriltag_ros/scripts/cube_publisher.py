@@ -29,24 +29,93 @@ class CubePublisher():
         # define cube size
         self.cube_side_length = 0.06
         L = self.cube_side_length / 2.0
+        tag_dist_from_center = self.cube_side_length / 4.0
 
-        # define poses for tags 1-6
-        tag_cube_poses = {
-            1: ([ 0, 0, -L], tfs.quaternion_from_euler(0, np.pi, 0)),          # front (blue)
-            2: ([ 0, 0, -L], tfs.quaternion_from_euler(0, -np.pi/2, 0)),       # left (yellow)
-            3: ([ 0, 0, -L], tfs.quaternion_from_euler(-np.pi/2, 0, np.pi/2)), # bottom (red)
-            4: ([ 0, 0, -L], tfs.quaternion_from_euler(np.pi/2, 0, -np.pi/2)), # top (white)
-            5: ([ 0, 0, -L], tfs.quaternion_from_euler(0, np.pi/2, 0)),        # right (green)
-            6: ([ 0, 0, -L], tfs.quaternion_from_euler(0, 0, 0)),              # back (cyan)
+        corners = {
+            'tl': [-tag_dist_from_center,  tag_dist_from_center, 0], # top left
+            'tr': [ tag_dist_from_center,  tag_dist_from_center, 0], # top right
+            'bl': [-tag_dist_from_center, -tag_dist_from_center, 0], # bottom left
+            'br': [ tag_dist_from_center, -tag_dist_from_center, 0], # bottom right
         }
 
-        # list transforms
+
+        # order of tags: top left, top right, bottom left, bottom right
+        faces = {
+            'front': {
+                'translation': [0, 0, L],
+                'rotation': tfs.quaternion_from_euler(0, np.pi, 0),
+                'tag_ids': [1, 2, 3, 4]
+            }
+            'left': {
+                'translation': [0, 0, -L],
+                'rotation': tfs.quaternion_from_euler(0, -np.pi/2, 0),
+                'tag_ids': [5, 6, 7, 8]
+            }
+            'bottom': {
+                'translation': [0, 0, -L],
+                'rotation': tfs.quaternion_from_euler(-np.pi/2, 0, np.pi/2),
+                'tag_ids': [9, 10, 11, 12]
+            }
+            'top': {
+                'translation': [0, 0, -L],
+                'rotation': tfs.quaternion_from_euler(np.pi/2, 0, -np.pi/2),
+                'tag_ids': [13, 14, 15, 16]
+            }
+            'right': {
+                'translation': [0, 0, -L],
+                'rotation': tfs.quaternion_from_euler(0, np.pi/2, 0),
+                'tag_ids': [17, 18, 19, 20]
+            }
+            'back': {
+                'translation': [0, 0, -L],
+                'rotation': tfs.quaternion_from_euler(0, 0, 0),
+                'tag_ids': [21, 22, 23, 24]
+            }
+        }
+
+        # define transforms
         transforms = {}
-        for tag_id, (p_tag_cube, q_tag_cube) in tag_cube_poses.items():
-            T_tag_cube = tfs.quaternion_matrix(q_tag_cube)
-            T_tag_cube[:3, 3] = p_tag_cube
-            transforms[tag_id] = T_tag_cube
+
+        # iterate through each face and the data in it
+        for face_name, face_data in faces.items():
+            # compute face-to-cube transform
+            T_cube_face = tfs.quaternion_matrix(face_data['rotation'])
+            T_cube_face[:3, 3] = face_data['translation']
+
+            # iterate through each tag on the face
+            for i, tag_id in enumerate(face_data['tag_ids']):
+                # get corner position in face coordinates
+                corner_pos = corners[list(corners.keys())[i]]
+
+                # compute tag-to-face transform
+                T_face_tag = np.eye(4) # 4x4 identity matrix
+                T_face_tag[:3, 3] = corner_pos
+
+                # compute cube -> face -> tag = cube -> tag transform
+                T_cube_tag = T_cube_face @ T_face_tag
+
+                # get tag-to-cube transform by inverting
+                transforms[tag_id] = np.linalg.inv(T_cube_tag)
+
         return transforms
+
+        # # define poses for tags 1-6
+        # tag_cube_poses = {
+        #     1: ([ 0, 0, -L], tfs.quaternion_from_euler(0, np.pi, 0)),          # front (blue)
+        #     2: ([ 0, 0, -L], tfs.quaternion_from_euler(0, -np.pi/2, 0)),       # left (yellow)
+        #     3: ([ 0, 0, -L], tfs.quaternion_from_euler(-np.pi/2, 0, np.pi/2)), # bottom (red)
+        #     4: ([ 0, 0, -L], tfs.quaternion_from_euler(np.pi/2, 0, -np.pi/2)), # top (white)
+        #     5: ([ 0, 0, -L], tfs.quaternion_from_euler(0, np.pi/2, 0)),        # right (green)
+        #     6: ([ 0, 0, -L], tfs.quaternion_from_euler(0, 0, 0)),              # back (cyan)
+        # }
+
+        # # list transforms
+        # transforms = {}
+        # for tag_id, (p_tag_cube, q_tag_cube) in tag_cube_poses.items():
+        #     T_tag_cube = tfs.quaternion_matrix(q_tag_cube)
+        #     T_tag_cube[:3, 3] = p_tag_cube
+        #     transforms[tag_id] = T_tag_cube
+        # return transforms
 
     def detections_callback(self, msg):
         if not msg.detections:
