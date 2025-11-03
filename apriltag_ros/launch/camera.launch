@@ -23,5 +23,6 @@
     <!-- <arg name="stereo_module/exposure/1" value="5000"/> -->
     <!-- <arg name="stereo_module/gain/1"     value="16"/> -->
     <!-- <arg name="stereo_module/emitter_enabled"     value="0"/> -->
+    <remap from="/camera/color/image_raw" to="/rs_camera/color/image_raw" />
   </include>
 </launch>
