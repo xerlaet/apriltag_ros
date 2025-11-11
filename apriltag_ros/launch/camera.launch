@@ -24,5 +24,14 @@
     <!-- <arg name="stereo_module/gain/1"     value="16"/> -->
     <!-- <arg name="stereo_module/emitter_enabled"     value="0"/> -->
     <remap from="/camera/color/image_raw" to="/rs_camera/color/image_raw" />
+    
+    <arg name="color_width"         default="640"/>
+    <arg name="color_height"        default="480"/>
+    <arg name="enable_color"        default="true"/>
+
+    <arg name="fisheye_fps"         default="30"/>
+    <arg name="depth_fps"           default="30"/>
+    <arg name="infra_fps"           default="30"/>
+    <arg name="color_fps"           default="30"/>
   </include>
 </launch>
