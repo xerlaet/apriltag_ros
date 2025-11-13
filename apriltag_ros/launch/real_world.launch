@@ -1,0 +1,12 @@
+<launch>
+  <!-- Launch roscore if not already running -->
+  <arg name="roscore" default="true" />
+
+  <include file="$(find apriltag_ros)/launch/camera.launch" />
+
+  <include file="$(find apriltag_ros)/launch/continuous_detection.launch" />
+
+  <node pkg="apriltag_ros" type="cube_publisher.py" name="cube_publisher" output="screen" />
+
+  <node pkg="apriltag_ros" type="base_publisher.py" name="base_publisher" output="screen" />
+</launch>
