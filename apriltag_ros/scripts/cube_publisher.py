@@ -4,8 +4,10 @@ import rospy
 import numpy as np
 import tf.transformations as tfs
 from geometry_msgs.msg import Vector3
+from geometry_msgs.msg import TransformStamped
 from nav_msgs.msg import Odometry
 from apriltag_ros.msg import AprilTagDetectionArray
+import tf2_ros
 
 class CubePublisher():
     def __init__(self):
@@ -14,6 +16,7 @@ class CubePublisher():
         
         self.pub = rospy.Publisher('/obj_odometry', Odometry, queue_size=1)
         self.sub = rospy.Subscriber('/tag_detections', AprilTagDetectionArray, self.detections_callback, queue_size=1)
+        self.transform_broadcaster = tf2_ros.TransformBroadcaster()
 
         # state variables for cube velocity calculation
         self.last_time = None
@@ -38,34 +41,33 @@ class CubePublisher():
             'br': [ tag_dist_from_center, -tag_dist_from_center, 0], # bottom right
         }
 
-
         # order of tags: top left, top right, bottom left, bottom right
         faces = {
             'front': {
-                'translation': [0, 0, L],
+                'translation': [0, 0, -L],
                 'rotation': tfs.quaternion_from_euler(0, np.pi, 0),
                 'tag_ids': [1, 2, 3, 4]
-            }
+            },
             'left': {
                 'translation': [0, 0, -L],
                 'rotation': tfs.quaternion_from_euler(0, -np.pi/2, 0),
                 'tag_ids': [5, 6, 7, 8]
-            }
+            },
             'bottom': {
                 'translation': [0, 0, -L],
                 'rotation': tfs.quaternion_from_euler(-np.pi/2, 0, np.pi/2),
                 'tag_ids': [9, 10, 11, 12]
-            }
+            },
             'top': {
                 'translation': [0, 0, -L],
                 'rotation': tfs.quaternion_from_euler(np.pi/2, 0, -np.pi/2),
                 'tag_ids': [13, 14, 15, 16]
-            }
+            },
             'right': {
                 'translation': [0, 0, -L],
                 'rotation': tfs.quaternion_from_euler(0, np.pi/2, 0),
                 'tag_ids': [17, 18, 19, 20]
-            }
+            },
             'back': {
                 'translation': [0, 0, -L],
                 'rotation': tfs.quaternion_from_euler(0, 0, 0),
@@ -79,8 +81,8 @@ class CubePublisher():
         # iterate through each face and the data in it
         for face_name, face_data in faces.items():
             # compute face-to-cube transform
-            T_cube_face = tfs.quaternion_matrix(face_data['rotation'])
-            T_cube_face[:3, 3] = face_data['translation']
+            T_face_cube = tfs.quaternion_matrix(face_data['rotation'])
+            T_face_cube[:3, 3] = face_data['translation']
 
             # iterate through each tag on the face
             for i, tag_id in enumerate(face_data['tag_ids']):
@@ -90,6 +92,8 @@ class CubePublisher():
                 # compute tag-to-face transform
                 T_face_tag = np.eye(4) # 4x4 identity matrix
                 T_face_tag[:3, 3] = corner_pos
+
+                T_cube_face = np.linalg.inv(T_face_cube)
 
                 # compute cube -> face -> tag = cube -> tag transform
                 T_cube_tag = T_cube_face @ T_face_tag
@@ -126,6 +130,7 @@ class CubePublisher():
 
         # process detections
         poses = []
+        raw_tag_poses = []
         for detection in msg.detections:
             tag_id = detection.id[0]
 
@@ -136,6 +141,8 @@ class CubePublisher():
                 q = detection.pose.pose.pose.orientation
                 T_camera_tag = tfs.quaternion_matrix([q.x, q.y, q.z, q.w])
                 T_camera_tag[:3, 3] = [p.x, p.y, p.z]
+
+                raw_tag_poses.append(T_camera_tag)
 
                 # calculate camera to cube transform and append to list
                 T_tag_cube = self.tag_cube_transforms[tag_id]
@@ -162,6 +169,28 @@ class CubePublisher():
             self.last_time = self.current_time
             self.last_pose_matrix = self.current_pose_matrix.copy()
     
+        # # publish debug transforms for all detected tags
+        # transforms = []
+        # for index, pose in enumerate(poses):
+        #     t = TransformStamped()
+        #     t.header.stamp = self.current_time
+        #     t.header.frame_id = self.camera_frame
+        #     t.child_frame_id = f"tag{index}"
+            
+        #     dt = (self.current_time - self.last_time).to_sec()
+        #     trans = tfs.translation_from_matrix(pose)
+        #     quat = tfs.quaternion_from_matrix(pose)
+        #     t.transform.translation.x = trans[0]
+        #     t.transform.translation.y = trans[1]
+        #     t.transform.translation.z = trans[2]
+        #     t.transform.rotation.x = quat[0]
+        #     t.transform.rotation.y = quat[1]
+        #     t.transform.rotation.z = quat[2]
+        #     t.transform.rotation.w = quat[3]
+        #     transforms.append(t)
+            
+        # self.transform_broadcaster.sendTransform(transforms)        
+
     def publish_odom(self, trans, quat, linear_vel, angular_vel):
         msg = Odometry()
         msg.header.stamp = self.current_time
