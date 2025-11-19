@@ -4,8 +4,8 @@
 
   <!-- configure camera input -->
   <!--<arg name="camera_name" default="/816612061646/color/" />-->
-  <arg name="camera_name" default="/rs_camera/color/" />
-  <arg name="image_topic" default="image_raw" />
+  <arg name="camera_name" default="/rs_camera/infra1/" />
+  <arg name="image_topic" default="image_rect_raw" />
   <arg name="queue_size" default="1" />
 
   <!-- apriltag_ros continuous detection node -->

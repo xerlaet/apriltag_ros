@@ -2,36 +2,52 @@
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find leap_rl_control)/config/default.rviz" />
 
   <include file="$(find realsense2_camera)/launch/rs_camera.launch">
-    <!-- <arg name="json_file_path"    value="$(find apriltag_ros)/launch/camera_settings_d415.json"/>
+    <!-- <arg name="json_file_path"    value="$(find apriltag_ros)/config/d415settings.json"/> -->
 
-    <arg name="initial_reset"     value="true"/>
+    <arg name="initial_reset"     value="false"/>
     <arg name="enable_color"      value="false"/>
     <arg name="enable_depth"      value="false"/>
-    <arg name="enable_infra2"     value="false"/>
     <arg name="enable_infra1"     value="true"/>
+    <arg name="enable_infra2"     value="false"/>
 
-    <arg name="infra_width"       value="480"/>
-    <arg name="infra_height"      value="270"/>
-    <arg name="infra_fps"         value="60"/>
+    <arg name="infra_width"       value="640"/>
+    <arg name="infra_height"      value="480"/>
+    <arg name="infra_fps"         value="90"/>
 
     <arg name="enable_accel"      value="false"/>
     <arg name="enable_gyro"       value="false"/>
     <arg name="enable_sync"       value="false"/>
     <arg name="enable_pointcloud" value="false"/>
-    <arg name="align_depth"       value="false"/> -->
+    <arg name="align_depth"       value="false"/>
 
-    <!-- <arg name="stereo_module/exposure/1" value="5000"/> -->
-    <!-- <arg name="stereo_module/gain/1"     value="16"/> -->
+    <arg name="stereo_module/exposure/1" value="8000"/>
+    <arg name="stereo_module/gain/1"     value="90"/>
     <!-- <arg name="stereo_module/emitter_enabled"     value="0"/> -->
     <arg name="camera"         value="rs_camera"/>
 
-    <arg name="color_width"         default="640"/>
-    <arg name="color_height"        default="480"/>
-    <arg name="enable_color"        default="true"/>
-
-    <arg name="fisheye_fps"         default="30"/>
-    <arg name="depth_fps"           default="30"/>
+    <!-- <arg name="infra_width"         default="848"/>
+    <arg name="infra_height"        default="480"/>
+    <arg name="enable_infra"        default="true"/>
+    <arg name="enable_infra1"       default="false"/>
+    <arg name="enable_infra2"       default="false"/>
+    <arg name="infra_rgb"           default="false"/>
     <arg name="infra_fps"           default="30"/>
-    <arg name="color_fps"           default="30"/>
+
+    <arg name="stereo_module/exposure/1"  default="7500"/>
+    <arg name="stereo_module/gain/1"      default="16"/>
+    <arg name="stereo_module/exposure/2"  default="1"/>
+    <arg name="stereo_module/gain/2"      default="16"/> -->
+
+    <!-- <arg name="color_width"         default="640"/>
+    <arg name="color_height"        default="480"/>
+    <arg name="enable_color"        default="true"/> -->
+    <!-- <arg name="fisheye_fps"         default="60"/>
+    <arg name="depth_fps"           default="60"/>
+    <arg name="infra_fps"           default="60"/>
+    <arg name="color_fps"           default="60"/> -->
+
+    <!-- <arg name="enable_auto_exposure" value="false" />
+    <arg name="stereo_module/exposure/1" value="8000" />
+    <arg name="stereo_module/gain/1" value="150" /> -->
   </include>
 </launch>
