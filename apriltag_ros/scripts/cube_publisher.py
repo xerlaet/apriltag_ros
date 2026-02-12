@@ -225,7 +225,14 @@ class CubePublisher():
         for i in range(1, len(quaternions)): # ensure all are in the same hemisphere
             if np.dot(quaternions[0], quaternions[i]) < 0:
                 quaternions[i] *= -1
-        avg_quaternion = np.mean(quaternions, axis=0)
+        
+        # build matrix for eigenvalue decomposition
+        Q = np.array(quaternions)
+        M = Q.T @ Q
+
+        # decompose and find eigenvector with largest eigenvalue
+        eigenvalues, eigenvectors = np.linalg.eigh(M)
+        avg_quaternion = eigenvectors[:, np.argmax(eigenvalues)]
         avg_quaternion /= np.linalg.norm(avg_quaternion) # normalize
 
         # construct average transformation matrix
