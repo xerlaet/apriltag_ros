@@ -2,23 +2,27 @@
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find leap_rl_control)/config/default.rviz" />
 
   <include file="$(find realsense2_camera)/launch/rs_camera.launch">
-    <arg name="json_file_path"    value="$(find apriltag_ros)/config/d435settings.json"/>
+    <arg name="json_file_path"   value="$(find apriltag_ros)/config/d435settings.json"/>
+    <!-- <arg name="json_file_path"    value="$(find apriltag_ros)/config/newsettings.json"/> -->
 
     <arg name="initial_reset"     value="false"/>
     <arg name="enable_color"      value="false"/>
-    <arg name="enable_depth"      value="false"/>
+    <arg name="enable_depth"      value="true"/>
     <arg name="enable_infra1"     value="true"/>
     <arg name="enable_infra2"     value="false"/>
 
-    <arg name="infra_width"       value="640"/>
+    <arg name="infra_width"       value="848"/>
     <arg name="infra_height"      value="480"/>
     <arg name="infra_fps"         value="30"/>
+    <!-- <arg name="depth_width"       value="840"/>
+    <arg name="depth_height"      value="480"/>
+    <arg name="depth_fps"         value="30"/> -->
 
     <arg name="enable_accel"      value="false"/>
     <arg name="enable_gyro"       value="false"/>
     <arg name="enable_sync"       value="false"/>
-    <arg name="enable_pointcloud" value="false"/>
-    <arg name="align_depth"       value="false"/>
+    <!-- <arg name="enable_pointcloud" value="true"/> -->
+    <!-- <arg name="align_depth"       value="false"/> -->
 
     <arg name="stereo_module/exposure/1" value="9000"/>
     <arg name="stereo_module/gain/1"     value="16"/>

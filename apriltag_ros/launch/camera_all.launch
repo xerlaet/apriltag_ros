@@ -1,0 +1,44 @@
+<launch>
+    <!-- 1. RealSense Camera Launch -->
+    <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+        <arg name="json_file_path" value="$(find apriltag_ros)/config/d435settings.json"/>
+        <arg name="initial_reset" value="false"/>
+        <arg name="enable_color" value="false"/>
+        <arg name="enable_depth" value="true"/>
+        <arg name="enable_infra1" value="true"/>
+        <arg name="enable_infra2" value="false"/>
+        <arg name="infra_width" value="848"/>
+        <arg name="infra_height" value="480"/>
+        <arg name="infra_fps" value="30"/>
+        <arg name="camera" value="rs_camera"/>
+    </include>
+
+    <!-- 2. AprilTag Continuous Detection (Handles both standalone and bundles) -->
+    <arg name="camera_name" default="/rs_camera/infra1/" />
+    <arg name="image_topic" default="image_rect_raw" />
+
+    <node pkg="apriltag_ros" type="apriltag_ros_continuous_node" name="apriltag_ros_continuous_node" clear_params="true" output="screen">
+        <remap from="image_rect" to="$(arg camera_name)/$(arg image_topic)" />
+        <remap from="camera_info" to="$(arg camera_name)/camera_info" />
+
+        <param name="publish_tag_detections_image" type="bool" value="true" />
+        <param name="queue_size" type="int" value="1" />
+
+        <!-- Load detection settings and tag definitions -->
+        <rosparam command="load" file="$(find apriltag_ros)/config/settings.yaml"/>
+        <rosparam command="load" file="$(find apriltag_ros)/config/tags.yaml"/>
+    </node>
+
+    <!-- 3. Base Publisher (Tag ID 0 to tag_frame) -->
+    <node pkg="apriltag_ros" type="base_publisher.py" name="base_publisher" output="screen" />
+
+    <!-- 4. Cube Bundle Publisher (Bundle 'cube' to /obj_odometry) -->
+    <node pkg="apriltag_ros" type="cube_publisher_new.py" name="cube_bundle_publisher" output="screen" />
+
+    <!-- 5. Cube Marker Visualization (Odometry to mesh marker) -->
+    <node pkg="apriltag_ros" type="cube_marker_publisher.py" name="cube_marker_publisher" output="screen" />
+
+    <!-- 6. Visualization (RViz) -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find leap_rl_control)/config/default.rviz" />
+
+</launch>
