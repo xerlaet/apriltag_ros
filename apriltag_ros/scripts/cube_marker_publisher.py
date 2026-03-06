@@ -67,9 +67,9 @@ class CubeMarkerPublisher:
                 
                 # VISUALIZATION OFFSET: Move the goal cube 0.15m away from the hand
                 # Adjust which axis (x, y, or z) as needed based on your view
-                self.last_goal_pose.position.x = t.transform.translation.x + 0.15
-                self.last_goal_pose.position.y = t.transform.translation.y - 0.15
-                self.last_goal_pose.position.z = t.transform.translation.z
+                self.last_goal_pose.position.x = t.transform.translation.x - 0.1
+                self.last_goal_pose.position.y = t.transform.translation.y - 0.1
+                self.last_goal_pose.position.z = t.transform.translation.z - 0.1
                 self.last_goal_pose.orientation = t.transform.rotation
         except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
             pass
