@@ -30,7 +30,7 @@ class CubePublisher():
 
     def initialize_transforms(self):
         # define cube size
-        self.cube_side_length = 0.06
+        self.cube_side_length = 0.07
         L = self.cube_side_length / 2.0
         tag_dist_from_center = self.cube_side_length / 4.0
 

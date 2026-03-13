@@ -3,10 +3,10 @@ import numpy as np
 import tf.transformations as tfs
 
 def generate_bundle_yaml():
-    cube_side_length = 0.06
+    cube_side_length = 0.07
     L = cube_side_length / 2.0
-    tag_dist_from_center = cube_side_length / 4.0
-    tag_size = 0.017 # From tags.yaml
+    tag_dist_from_center = 0.0169418 # measured from sticker sheet
+    tag_size = 0.0204 # From tags.yaml
 
     corners = {
         'tl': [-tag_dist_from_center,  tag_dist_from_center, 0], # top left
