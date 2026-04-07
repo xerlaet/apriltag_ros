@@ -35,8 +35,10 @@
     <!-- 4. Cube Bundle Publisher (Bundle 'cube' to /obj_odometry) -->
     <node pkg="apriltag_ros" type="cube_publisher_new.py" name="cube_bundle_publisher" output="screen" />
 
-    <!-- 5. Cube Marker Visualization (Odometry to mesh marker) -->
-    <node pkg="apriltag_ros" type="cube_marker_publisher.py" name="cube_marker_publisher" output="screen" />
+    <!-- 5. Cube Marker Visualization (Odometry to dynamic color markers) -->
+    <node pkg="apriltag_ros" type="cube_visualizer.py" name="cube_visualizer" output="screen">
+        <param name="success_tolerance" value="0.4" />
+    </node>
 
     <!-- 6. Visualization (RViz) -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find leap_rl_control)/config/default.rviz" />
