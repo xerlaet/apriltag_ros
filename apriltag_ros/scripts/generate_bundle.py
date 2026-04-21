@@ -5,8 +5,8 @@ import tf.transformations as tfs
 def generate_bundle_yaml():
     cube_side_length = 0.07
     L = cube_side_length / 2.0
-    tag_dist_from_center = 0.0169418 # measured from sticker sheet
-    tag_size = 0.0204 # From tags.yaml
+    tag_dist_from_center = 0.016577
+    tag_size = 0.02947
 
     corners = {
         'tl': [-tag_dist_from_center,  tag_dist_from_center, 0], # top left
@@ -19,32 +19,32 @@ def generate_bundle_yaml():
         'front': {
             'translation': [0, 0, -L],
             'rotation': tfs.quaternion_from_euler(0, np.pi, 0),
-            'tag_ids': [1, 2, 3, 4]
+            'tag_ids': [3, 4, 1, 2]
         },
         'left': {
             'translation': [0, 0, -L],
             'rotation': tfs.quaternion_from_euler(0, -np.pi/2, 0),
-            'tag_ids': [5, 6, 7, 8]
+            'tag_ids': [11, 12, 9, 10]
         },
         'bottom': {
             'translation': [0, 0, -L],
             'rotation': tfs.quaternion_from_euler(-np.pi/2, 0, np.pi/2),
-            'tag_ids': [9, 10, 11, 12]
+            'tag_ids': [19, 20, 17, 18]
         },
         'top': {
             'translation': [0, 0, -L],
             'rotation': tfs.quaternion_from_euler(np.pi/2, 0, -np.pi/2),
-            'tag_ids': [13, 14, 15, 16]
+            'tag_ids': [23, 24, 21, 22]
         },
         'right': {
             'translation': [0, 0, -L],
             'rotation': tfs.quaternion_from_euler(0, np.pi/2, 0),
-            'tag_ids': [17, 18, 19, 20]
+            'tag_ids': [15, 16, 13, 14]
         },
         'back': {
             'translation': [0, 0, -L],
             'rotation': tfs.quaternion_from_euler(0, 0, 0),
-            'tag_ids': [21, 22, 23, 24]
+            'tag_ids': [7, 8, 5, 6]
         }
     }
 

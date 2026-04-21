@@ -93,8 +93,8 @@ class CubeBundlePublisher():
                 v_bundle = np.dot(R_cam_bundle, v_cam)
                 omega_bundle = np.dot(R_cam_bundle, omega_cam)
                 
-                odom.twist.twist.linear = Vector3(*v_bundle)
-                odom.twist.twist.angular = Vector3(*omega_bundle)
+                odom.twist.twist.linear = Vector3(*v_cam)
+                odom.twist.twist.angular = Vector3(*omega_cam)
                 
                 self.pub.publish(odom)
 
