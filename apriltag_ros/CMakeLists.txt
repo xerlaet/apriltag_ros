@@ -157,6 +157,8 @@ install(TARGETS
 
 install(PROGRAMS
   scripts/analyze_image
+  scripts/analyze_distance_error.py
   scripts/cube_publisher.py
   scripts/base_publisher.py
+  scripts/distance_error_logger.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

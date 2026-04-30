@@ -24,6 +24,101 @@ catkin build    # Build all packages in the workspace (catkin_make_isolated will
 ```
 See the [ROS wiki](http://wiki.ros.org/apriltag_ros) for details and tutorials.
 
+## Cube-to-Tag Distance Error Logging
+
+This repository includes an experiment logger for measuring AprilTag pose error from a known cube-to-paper setup.
+
+When running `camera_all.launch`, enable the logger with:
+```
+roslaunch apriltag_ros camera_all.launch enable_error_logger:=true
+```
+
+Set CSV output path explicitly with launch arg:
+```
+roslaunch apriltag_ros camera_all.launch \
+  enable_error_logger:=true \
+  error_logger_csv_path:=/tmp/apriltag_error_run01.csv
+```
+
+The logger node (`distance_error_logger.py`) listens to:
+- camera-to-cube transform (`camera_frame -> cube`)
+- camera-to-paper-tag transform (`camera_frame -> tag_frame`, where `tag_frame` is tag ID 0)
+
+It computes:
+- measured 3D center-to-center distance
+- known setup distance (meters, derived from tag width + edge gap + cube size + cube center height)
+- per-sample signed error, absolute error, and squared error
+- rolling aggregate stats (mean signed error, MAE, RMSE)
+- placement readiness feedback:
+  - console status (`READY` or `ADJUST`) using distance and orientation thresholds
+  - RViz text marker on `/distance_error_status`
+
+### Default Geometry Assumptions
+
+The defaults match the described paper experiment and can be overridden via ROS params:
+- `~tag_width_in`: `2.08`
+- `~edge_gap_in`: `4.0` (edge-to-edge spacing between tag and cube in the paper plane)
+- `~cube_size_cm`: `7.0`
+- `~cube_center_height_cm`: `3.5`
+
+Known 3D distance uses:
+```
+horizontal_center_to_center = edge_gap + tag_width/2 + cube_size/2
+known_distance = sqrt(horizontal_center_to_center^2 + cube_center_height^2)
+```
+
+### CSV Output
+
+By default, output is written to `/tmp/apriltag_distance_error_<timestamp>.csv`.
+Set launch arg `error_logger_csv_path` (or node private param `~csv_path`) to override.
+
+Columns:
+- `stamp`
+- `cube_x`, `cube_y`, `cube_z`
+- `tag_x`, `tag_y`, `tag_z`
+- `measured_dist_m`, `known_dist_m`
+- `signed_error_m`, `abs_error_m`, `sq_error_m`
+
+### Placement Guidance Params
+
+- `~distance_tolerance_m` (default `0.02`)
+- `~orientation_tolerance_deg` (default `10.0`)
+- `~placement_print_every_n` (default `10`)
+- `~status_marker_topic` (default `/distance_error_status`)
+- `~max_transform_age_s` (default `0.2`) - skip stale transforms
+- `~tag_min_delta_m` (default `0.0005`) - min tag movement considered fresh
+- `~max_tag_static_samples` (default `5`) - max repeated near-identical tag samples
+- `~log_only_when_ready` (default `false`) - if true, only logs READY samples
+
+### Validation Checklist
+
+- Place tag ID 0 on the paper and cube at the known marked location.
+- Start `camera_all.launch` with `enable_error_logger:=true`.
+- Confirm TF includes `cube` and `tag_frame` under the same camera frame.
+- Confirm CSV rows are being appended and distances are in plausible meter ranges.
+- Compare logger MAE/RMSE against offline CSV analysis for consistency.
+
+## CSV Analysis + Visualization
+
+Use this script to compute summary statistics and generate plots:
+```
+rosrun apriltag_ros analyze_distance_error.py /tmp/apriltag_distance_error_YYYYMMDD_HHMMSS.csv
+```
+
+It prints:
+- mean signed error (bias)
+- MAE, RMSE, std-dev
+- abs-error percentiles (P50/P90/P95/P99)
+- suggested 95% and 99% symmetric training bounds
+
+It also saves a plot image next to the CSV by default:
+- `<csv_basename>_plot.png`
+
+Custom plot path:
+```
+rosrun apriltag_ros analyze_distance_error.py /tmp/apriltag_distance_error_YYYYMMDD_HHMMSS.csv --plot-output /tmp/run_plot.png
+```
+
 ## Tag Size Definition
 
 For a correct depth estimation (and hence the correct full pose) it is necessary to specify the tag size in config/tags.yaml correctly. In the [Wiki for the AprilTag Library](https://github.com/AprilRobotics/apriltag/wiki/AprilTag-User-Guide#pose-estimation)  the correct interpretation of the term "tag size" is explained. The size is defined by the length of the black/white border between the complete black and white rectangle of any tag type. Note that for apriltag3 marker families this does not in fact correspond to the outside of the marker.

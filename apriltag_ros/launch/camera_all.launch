@@ -1,4 +1,7 @@
 <launch>
+    <arg name="enable_error_logger" default="false" />
+    <arg name="error_logger_csv_path" default="" />
+
     <!-- 1. RealSense Camera Launch -->
     <include file="$(find realsense2_camera)/launch/rs_camera.launch">
         <arg name="json_file_path" value="$(find apriltag_ros)/config/d435settings.json"/>
@@ -40,7 +43,12 @@
         <param name="success_tolerance" value="0.4" />
     </node>
 
-    <!-- 6. Visualization (RViz) -->
+    <!-- 6. Optional distance-error logger (cube center to paper tag center) -->
+    <node if="$(arg enable_error_logger)" pkg="apriltag_ros" type="distance_error_logger.py" name="distance_error_logger" output="screen">
+        <param name="csv_path" value="$(arg error_logger_csv_path)" />
+    </node>
+
+    <!-- 7. Visualization (RViz) -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find leap_rl_control)/config/default.rviz" />
 
 </launch>
