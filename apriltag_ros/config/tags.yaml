@@ -21,8 +21,8 @@
 #   ]
 standalone_tags:
   [
-    {id: 0, size: 0.052832, name: 'TAG_0'}, # sized at 52.832mm for the error test
-    # {id: 0, size: 0.036, name: 'TAG_0'}, # sized at 36mm for the v2 base
+    # {id: 0, size: 0.052832, name: 'TAG_0'}, # sized at 52.832mm for the error test
+    {id: 0, size: 0.036, name: 'TAG_0'}, # sized at 36mm for the v2 base
   ]
 # ## Tag bundle definitions
 # ### Remarks
