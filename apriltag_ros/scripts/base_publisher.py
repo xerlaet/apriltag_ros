@@ -8,13 +8,14 @@ from apriltag_ros.msg import AprilTagDetectionArray
 class BasePublisher():
     def __init__(self):
         self.camera_frame = None
+        self.detections_topic = rospy.get_param('~detections_topic', '/tag_detections')
 
         self.pub = tf2_ros.TransformBroadcaster()
-        self.sub = rospy.Subscriber('/tag_detections', AprilTagDetectionArray, self.detection_callback, queue_size=1)
+        self.sub = rospy.Subscriber(self.detections_topic, AprilTagDetectionArray, self.detection_callback, queue_size=1)
 
         # logs
         rospy.loginfo("base pose estimator node initialized")
-        rospy.loginfo("waiting for tag detections on /tag_detections...")
+        rospy.loginfo("waiting for tag detections on %s...", self.detections_topic)
 
     def detection_callback(self, msg):
         if not msg.detections:

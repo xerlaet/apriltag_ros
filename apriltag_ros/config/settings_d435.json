@@ -22,8 +22,8 @@
         "aux-param-depthclampmin": "0",
         "aux-param-disparityshift": "0",
         "controls-autoexposure-auto": "False",
-        "controls-autoexposure-manual": "600",
-        "controls-color-autoexposure-auto": "False",
+        "controls-autoexposure-manual": "623",
+        "controls-color-autoexposure-auto": "True",
         "controls-color-autoexposure-manual": "166",
         "controls-color-backlight-compensation": "0",
         "controls-color-brightness": "0",
@@ -96,8 +96,7 @@
     },
     "schema version": 1,
     "viewer": {
-        "stream-depth-format": "Z16",
-        "stream-fps": "30",
+        "stream-fps": "60",
         "stream-height": "480",
         "stream-ir-format": "Y8",
         "stream-width": "848"

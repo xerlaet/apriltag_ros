@@ -159,10 +159,14 @@ install(PROGRAMS
   scripts/analyze_image
   scripts/analyze_distance_error.py
   scripts/base_publisher.py
+  scripts/calibrate_bundle.py
+  scripts/compare_bundle_calibration.py
   scripts/cube_publisher.py
   scripts/cube_publisher_new.py
+  scripts/cube_publisher_singles.py
   scripts/cube_pose_logger.py
+  scripts/cube_visualizer.py
   scripts/distance_error_logger.py
   scripts/plot_cube_pose.py
-  scripts/pose_kalman_filter.py
+  scripts/tag_detections_merger.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

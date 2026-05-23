@@ -32,6 +32,7 @@ class CubeBundlePublisher():
         self.camera_frame = rospy.get_param('~camera_frame', None)
         self.bundle_frame = rospy.get_param('~bundle_frame', 'cube')
         self.odom_topic = rospy.get_param('~odom_topic', '/obj_odometry')
+        self.detections_topic = rospy.get_param('~detections_topic', '/tag_detections')
 
         self.pub = rospy.Publisher(self.odom_topic, Odometry, queue_size=1)
 
@@ -85,12 +86,13 @@ class CubeBundlePublisher():
         self.last_pose_matrix = None
 
         rospy.loginfo("CubeBundlePublisher initialized.")
+        rospy.loginfo("  - Detections topic: %s", self.detections_topic)
         rospy.loginfo("  - Outlier rejection enabled: %s", ENABLE_OUTLIER_REJECTION)
         rospy.loginfo("  - Min tags to publish: %d", self.min_tags_to_publish)
         rospy.loginfo("  - Outlier thresholds: trans=%.3fm, rot=%.2frad",
                       self.outlier_trans_threshold, self.outlier_rot_threshold_rad)
 
-        self.sub = rospy.Subscriber('/tag_detections', AprilTagDetectionArray,
+        self.sub = rospy.Subscriber(self.detections_topic, AprilTagDetectionArray,
                                     self.detections_callback, queue_size=1)
 
     # =========================================================================

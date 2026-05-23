@@ -4,66 +4,125 @@
     <arg name="enable_pose_logger" default="false" />
     <arg name="pose_logger_csv_path" default="" />
 
-    <!-- 1. RealSense Camera Launch -->
-    <include file="$(find realsense2_camera)/launch/rs_camera.launch">
-        <!-- <arg name="json_file_path" value="$(find apriltag_ros)/config/d435settingsV2.json"/> -->
-        <arg name="initial_reset" value="false"/>
+    <!-- Dual-camera toggle -->
+    <arg name="enable_second_camera" default="true" />
+    <arg name="primary_camera_name" default="rs_camera" /> <!-- D435 -->
+    <arg name="primary_camera_serial" default="405622075411" />
+    <arg name="second_camera_name" default="rs_camera2" /> <!-- D455 -->
+    <arg name="second_camera_serial" default="037522251142" />
 
-        <arg name="enable_color" value="false"/>
-        <arg name="color_fps" value="30"/>
-        <arg name="color_width" value="848"/>
-        <arg name="color_height" value="480"/>
+    <!-- Per-camera RealSense tuning -->
+    <arg name="primary_json_file" default="$(find apriltag_ros)/config/settings_d435.json" />
+    <arg name="primary_exposure" default="623" />
+    <arg name="primary_gain" default="16" />
 
-        <arg name="enable_infra1" value="true"/>
-        <arg name="enable_infra2" value="false"/>
-        <arg name="infra_width" value="1280"/>
-        <arg name="infra_height" value="800"/>
-        <arg name="infra_fps" value="30"/>
+    <arg name="second_json_file" default="$(find apriltag_ros)/config/settings_d455.json" />
+    <arg name="second_exposure" default="1346" />
+    <arg name="second_gain" default="16" />
 
-        <arg name="enable_depth" value="false"/>
-        <!-- <arg name="depth_width" value="1280"/>
-        <arg name="depth_height" value="800"/>
-        <arg name="depth_fps" value="30"/> -->
+    <arg name="infra_width" default="848" />
+    <arg name="infra_height" default="480" />
+    <arg name="infra_fps" default="60" />
 
-        <arg name="camera" value="rs_camera"/>
+    <!-- Detection topics -->
+    <arg name="primary_detections_topic" default="/tag_detections" />
+    <arg name="second_detections_topic" default="/tag_detections_cam2" />
+    <arg name="merged_detections_topic" default="/tag_detections_merged" />
+    <arg name="primary_detections_image_topic" default="/tag_detections_image" />
+    <arg name="second_detections_image_topic" default="/tag_detections_image_cam2" />
+    <arg unless="$(arg enable_second_camera)" name="cube_detections_topic" default="/tag_detections" />
+    <arg if="$(arg enable_second_camera)" name="cube_detections_topic" default="$(arg merged_detections_topic)" />
+
+    <!-- 1. Primary RealSense (D435) -->
+    <include file="$(find apriltag_ros)/launch/includes/realsense_infra_camera.launch">
+        <arg name="camera_name" value="$(arg primary_camera_name)" />
+        <arg name="serial_no" value="$(arg primary_camera_serial)" />
+        <arg name="json_file_path" value="$(arg primary_json_file)" />
+        <arg name="exposure" value="$(arg primary_exposure)" />
+        <arg name="gain" value="$(arg primary_gain)" />
+        <arg name="infra_width" value="$(arg infra_width)" />
+        <arg name="infra_height" value="$(arg infra_height)" />
+        <arg name="infra_fps" value="$(arg infra_fps)" />
     </include>
 
-    <!-- 2. AprilTag Continuous Detection (Handles both standalone and bundles) -->
-    <!-- <arg name="camera_name" default="/rs_camera/color/" />
-    <arg name="image_topic" default="image_raw" /> -->
-    <arg name="camera_name" default="/rs_camera/infra1/" />
+    <!-- 1b. Secondary RealSense (D455, optional) -->
+    <group if="$(arg enable_second_camera)">
+        <include file="$(find apriltag_ros)/launch/includes/realsense_infra_camera.launch">
+            <arg name="camera_name" value="$(arg second_camera_name)" />
+            <arg name="serial_no" value="$(arg second_camera_serial)" />
+            <arg name="json_file_path" value="$(arg second_json_file)" />
+            <arg name="exposure" value="$(arg second_exposure)" />
+            <arg name="gain" value="$(arg second_gain)" />
+            <arg name="infra_width" value="$(arg infra_width)" />
+            <arg name="infra_height" value="$(arg infra_height)" />
+            <arg name="infra_fps" value="$(arg infra_fps)" />
+        </include>
+    </group>
+
+    <!-- 2. AprilTag Continuous Detection - Primary Camera -->
+    <arg name="camera_name" default="/$(arg primary_camera_name)/infra1/" />
     <arg name="image_topic" default="image_rect_raw" />
 
     <node pkg="apriltag_ros" type="apriltag_ros_continuous_node" name="apriltag_ros_continuous_node" clear_params="true" output="screen">
-        <remap from="image_rect" to="$(arg camera_name)/$(arg image_topic)" />
-        <remap from="camera_info" to="$(arg camera_name)/camera_info" />
+        <remap from="image_rect" to="$(arg camera_name)$(arg image_topic)" />
+        <remap from="camera_info" to="$(arg camera_name)camera_info" />
+        <remap from="tag_detections" to="$(arg primary_detections_topic)" />
+        <remap from="tag_detections_image" to="$(arg primary_detections_image_topic)" />
 
         <param name="publish_tag_detections_image" type="bool" value="true" />
         <param name="queue_size" type="int" value="1" />
 
-        <!-- Load detection settings and tag definitions -->
         <rosparam command="load" file="$(find apriltag_ros)/config/settings.yaml"/>
-        <!-- <rosparam command="load" file="$(find apriltag_ros)/config/tags.yaml"/> -->
         <rosparam command="load" file="$(find apriltag_ros)/config/tags_single.yaml"/>
     </node>
 
-    <!-- 3. Base Publisher (Tag ID 0 to tag_frame) -->
-    <node pkg="apriltag_ros" type="base_publisher.py" name="base_publisher" output="screen" />
+    <!-- 2b. AprilTag Continuous Detection - Secondary Camera -->
+    <group if="$(arg enable_second_camera)">
+        <arg name="camera2_name" default="/$(arg second_camera_name)/infra1/" />
 
-    <!-- 4. Cube Bundle Publisher (Bundle 'cube' to /obj_odometry) -->
-    <node pkg="apriltag_ros" type="cube_publisher_singles.py" name="cube_bundle_publisher" output="screen" />
+        <node pkg="apriltag_ros" type="apriltag_ros_continuous_node" name="apriltag_ros_continuous_node_cam2" clear_params="true" output="screen">
+            <remap from="image_rect" to="$(arg camera2_name)$(arg image_topic)" />
+            <remap from="camera_info" to="$(arg camera2_name)camera_info" />
+            <remap from="tag_detections" to="$(arg second_detections_topic)" />
+            <remap from="tag_detections_image" to="$(arg second_detections_image_topic)" />
 
-    <!-- 5. Cube Marker Visualization (Odometry to dynamic color markers) -->
+            <param name="publish_tag_detections_image" type="bool" value="true" />
+            <param name="queue_size" type="int" value="1" />
+
+            <rosparam command="load" file="$(find apriltag_ros)/config/settings.yaml"/>
+            <rosparam command="load" file="$(find apriltag_ros)/config/tags_single.yaml"/>
+        </node>
+    </group>
+
+    <!-- 2c. Merge detections from both cameras (dual mode only) -->
+    <node if="$(arg enable_second_camera)" pkg="apriltag_ros" type="tag_detections_merger.py" name="tag_detections_merger" output="screen">
+        <param name="cam1_topic" value="$(arg primary_detections_topic)" />
+        <param name="cam2_topic" value="$(arg second_detections_topic)" />
+        <param name="output_topic" value="$(arg merged_detections_topic)" />
+        <param name="output_frame" value="$(arg primary_camera_name)_infra1_optical_frame" />
+    </node>
+
+    <!-- 3. Base Publisher (Tag ID 0 to tag_frame) - primary camera only -->
+    <node pkg="apriltag_ros" type="base_publisher.py" name="base_publisher" output="screen">
+        <param name="detections_topic" value="$(arg primary_detections_topic)" />
+    </node>
+
+    <!-- 4. Cube Bundle Publisher -->
+    <node pkg="apriltag_ros" type="cube_publisher_singles.py" name="cube_bundle_publisher" output="screen">
+        <param name="detections_topic" value="$(arg cube_detections_topic)" />
+    </node>
+
+    <!-- 5. Cube Marker Visualization -->
     <node pkg="apriltag_ros" type="cube_visualizer.py" name="cube_visualizer" output="screen">
         <param name="success_tolerance" value="0.4" />
     </node>
 
-    <!-- 6. Optional distance-error logger (cube center to paper tag center) -->
+    <!-- 6. Optional distance-error logger -->
     <node if="$(arg enable_error_logger)" pkg="apriltag_ros" type="distance_error_logger.py" name="distance_error_logger" output="screen">
         <param name="csv_path" value="$(arg error_logger_csv_path)" />
     </node>
 
-    <!-- 6b. Optional cube pose logger (/obj_odometry -> CSV for smoothness plots) -->
+    <!-- 6b. Optional cube pose logger -->
     <node if="$(arg enable_pose_logger)" pkg="apriltag_ros" type="cube_pose_logger.py" name="cube_pose_logger" output="screen">
         <param name="csv_path" value="$(arg pose_logger_csv_path)" />
     </node>
