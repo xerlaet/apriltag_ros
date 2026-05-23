@@ -162,6 +162,10 @@ class TagDetector
   // Remove detections of tags with the same ID
   void removeDuplicates();
 
+  bool passesConfidence(const apriltag_detection_t* det) const;
+  static bool isBetterDetection(const apriltag_detection_t* candidate,
+                                const apriltag_detection_t* current_best);
+
   // AprilTag 2 code's attributes
   std::string family_;
   int threads_;
@@ -184,6 +188,10 @@ class TagDetector
   bool remove_duplicates_;
   bool run_quietly_;
   bool publish_tf_;
+  bool enable_confidence_filter_;
+  bool keep_best_on_failure_;
+  float min_decision_margin_;
+  int max_hamming_for_pose_;
   tf::TransformBroadcaster tf_pub_;
 
  public:

@@ -101,12 +101,12 @@ class CubeVisualizer:
                 goal_tf.transform.rotation.z,
                 goal_tf.transform.rotation.w,
             ]
-            print("Goal Quaternion:", goal_q)
+            # print("Goal Quaternion:", goal_q)
             # Applying the visualization offset to move it away from the hand
             goal_p = [
-                goal_tf.transform.translation.x - 0.1,
-                goal_tf.transform.translation.y - 0.1,
-                goal_tf.transform.translation.z - 0.1,
+                goal_tf.transform.translation.x - 0.2,
+                goal_tf.transform.translation.y - 0.2,
+                goal_tf.transform.translation.z - 0.2,
             ]
         except (
             tf2_ros.LookupException,

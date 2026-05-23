@@ -1,22 +1,36 @@
 <launch>
     <arg name="enable_error_logger" default="false" />
     <arg name="error_logger_csv_path" default="" />
+    <arg name="enable_pose_logger" default="false" />
+    <arg name="pose_logger_csv_path" default="" />
 
     <!-- 1. RealSense Camera Launch -->
     <include file="$(find realsense2_camera)/launch/rs_camera.launch">
-        <arg name="json_file_path" value="$(find apriltag_ros)/config/d435settings.json"/>
+        <!-- <arg name="json_file_path" value="$(find apriltag_ros)/config/d435settingsV2.json"/> -->
         <arg name="initial_reset" value="false"/>
+
         <arg name="enable_color" value="false"/>
-        <arg name="enable_depth" value="true"/>
+        <arg name="color_fps" value="30"/>
+        <arg name="color_width" value="848"/>
+        <arg name="color_height" value="480"/>
+
         <arg name="enable_infra1" value="true"/>
         <arg name="enable_infra2" value="false"/>
-        <arg name="infra_width" value="848"/>
-        <arg name="infra_height" value="480"/>
+        <arg name="infra_width" value="1280"/>
+        <arg name="infra_height" value="800"/>
         <arg name="infra_fps" value="30"/>
+
+        <arg name="enable_depth" value="false"/>
+        <!-- <arg name="depth_width" value="1280"/>
+        <arg name="depth_height" value="800"/>
+        <arg name="depth_fps" value="30"/> -->
+
         <arg name="camera" value="rs_camera"/>
     </include>
 
     <!-- 2. AprilTag Continuous Detection (Handles both standalone and bundles) -->
+    <!-- <arg name="camera_name" default="/rs_camera/color/" />
+    <arg name="image_topic" default="image_raw" /> -->
     <arg name="camera_name" default="/rs_camera/infra1/" />
     <arg name="image_topic" default="image_rect_raw" />
 
@@ -29,14 +43,15 @@
 
         <!-- Load detection settings and tag definitions -->
         <rosparam command="load" file="$(find apriltag_ros)/config/settings.yaml"/>
-        <rosparam command="load" file="$(find apriltag_ros)/config/tags.yaml"/>
+        <!-- <rosparam command="load" file="$(find apriltag_ros)/config/tags.yaml"/> -->
+        <rosparam command="load" file="$(find apriltag_ros)/config/tags_single.yaml"/>
     </node>
 
     <!-- 3. Base Publisher (Tag ID 0 to tag_frame) -->
     <node pkg="apriltag_ros" type="base_publisher.py" name="base_publisher" output="screen" />
 
     <!-- 4. Cube Bundle Publisher (Bundle 'cube' to /obj_odometry) -->
-    <node pkg="apriltag_ros" type="cube_publisher_new.py" name="cube_bundle_publisher" output="screen" />
+    <node pkg="apriltag_ros" type="cube_publisher_singles.py" name="cube_bundle_publisher" output="screen" />
 
     <!-- 5. Cube Marker Visualization (Odometry to dynamic color markers) -->
     <node pkg="apriltag_ros" type="cube_visualizer.py" name="cube_visualizer" output="screen">
@@ -46,6 +61,11 @@
     <!-- 6. Optional distance-error logger (cube center to paper tag center) -->
     <node if="$(arg enable_error_logger)" pkg="apriltag_ros" type="distance_error_logger.py" name="distance_error_logger" output="screen">
         <param name="csv_path" value="$(arg error_logger_csv_path)" />
+    </node>
+
+    <!-- 6b. Optional cube pose logger (/obj_odometry -> CSV for smoothness plots) -->
+    <node if="$(arg enable_pose_logger)" pkg="apriltag_ros" type="cube_pose_logger.py" name="cube_pose_logger" output="screen">
+        <param name="csv_path" value="$(arg pose_logger_csv_path)" />
     </node>
 
     <!-- 7. Visualization (RViz) -->

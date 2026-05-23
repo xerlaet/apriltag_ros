@@ -12,3 +12,9 @@ float64[] size
 # homography is from at least the four corners of one member tag and at most the
 # four corners of all member tags.
 geometry_msgs/PoseWithCovarianceStamped pose
+
+# Decode quality (from AprilTag library). For bundles: worst-case among tags used in PnP.
+int32 hamming
+float32 decision_margin
+# True if this detection contributed to a published pose (confident or keep-best fallback).
+bool used_in_pose

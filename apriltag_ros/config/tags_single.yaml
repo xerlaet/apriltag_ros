@@ -1,0 +1,51 @@
+# AprilTag configuration - ALL TAGS AS STANDALONE (for per-tag filtering)
+#
+# This version removes the 'cube' bundle so that every tag on the cube
+# is published individually on /tag_detections.
+# This allows you to implement custom occlusion / quality rejection per tag.
+
+standalone_tags:
+  [
+    # Base tag (used for world reference)
+    {id: 0, size: 0.036, name: 'BASE_TAG_0'},
+
+    # === Cube tags (moved from bundle to standalone) ===
+    # Face -Z (bottom)
+    {id: 3, size: 0.02947, name: 'CUBE_TAG_3'},
+    {id: 4, size: 0.02947, name: 'CUBE_TAG_4'},
+    {id: 1, size: 0.02947, name: 'CUBE_TAG_1'},
+    {id: 2, size: 0.02947, name: 'CUBE_TAG_2'},
+
+    # Face +X (right)
+    {id: 11, size: 0.02947, name: 'CUBE_TAG_11'},
+    {id: 12, size: 0.02947, name: 'CUBE_TAG_12'},
+    {id: 9,  size: 0.02947, name: 'CUBE_TAG_9'},
+    {id: 10, size: 0.02947, name: 'CUBE_TAG_10'},
+
+    # Face -Y (front)
+    {id: 19, size: 0.02947, name: 'CUBE_TAG_19'},
+    {id: 20, size: 0.02947, name: 'CUBE_TAG_20'},
+    {id: 17, size: 0.02947, name: 'CUBE_TAG_17'},
+    {id: 18, size: 0.02947, name: 'CUBE_TAG_18'},
+
+    # Face +Y (back)
+    {id: 23, size: 0.02947, name: 'CUBE_TAG_23'},
+    {id: 24, size: 0.02947, name: 'CUBE_TAG_24'},
+    {id: 21, size: 0.02947, name: 'CUBE_TAG_21'},
+    {id: 22, size: 0.02947, name: 'CUBE_TAG_22'},
+
+    # Face -X (left)
+    {id: 15, size: 0.02947, name: 'CUBE_TAG_15'},
+    {id: 16, size: 0.02947, name: 'CUBE_TAG_16'},
+    {id: 13, size: 0.02947, name: 'CUBE_TAG_13'},
+    {id: 14, size: 0.02947, name: 'CUBE_TAG_14'},
+
+    # Face +Z (top)
+    {id: 7, size: 0.02947, name: 'CUBE_TAG_7'},
+    {id: 8, size: 0.02947, name: 'CUBE_TAG_8'},
+    {id: 5, size: 0.02947, name: 'CUBE_TAG_5'},
+    {id: 6, size: 0.02947, name: 'CUBE_TAG_6'},
+  ]
+
+# IMPORTANT: No tag_bundles section.
+# Every tag is now published individually so you can filter them yourself.

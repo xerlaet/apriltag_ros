@@ -158,7 +158,11 @@ install(TARGETS
 install(PROGRAMS
   scripts/analyze_image
   scripts/analyze_distance_error.py
-  scripts/cube_publisher.py
   scripts/base_publisher.py
+  scripts/cube_publisher.py
+  scripts/cube_publisher_new.py
+  scripts/cube_pose_logger.py
   scripts/distance_error_logger.py
+  scripts/plot_cube_pose.py
+  scripts/pose_kalman_filter.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

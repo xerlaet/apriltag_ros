@@ -7,7 +7,12 @@ tag_decimate:      1.0        # default: 1.0
 tag_blur:          0.0        # default: 0.0
 tag_refine_edges:  1          # default: 1
 tag_debug:         0          # default: 0
-max_hamming_dist:  2          # default: 2 (Tunable parameter with 2 being a good choice - values >=3 consume large amounts of memory. Choose the largest value possible.)
+max_hamming_dist:  0          # default: 2 (Tunable parameter with 2 being a good choice - values >=3 consume large amounts of memory. Choose the largest value possible.)
+# Confidence filter for poses (bundle PnP + standalone). Low-confidence tags still drawn (red).
+enable_confidence_filter: true
+min_decision_margin: 50.0    # AprilTag decision_margin threshold; tune on your hardware
+max_hamming_for_pose: 0       # Max bit errors for pose (0 = perfect decode only)
+keep_best_on_failure: false    # If no tag passes, use single best detection for that bundle/tag
 # Other parameters
 publish_tf:        true       # default: false
 transport_hint:    "raw"      # default: raw, see http://wiki.ros.org/image_transport#Known_Transport_Packages for options

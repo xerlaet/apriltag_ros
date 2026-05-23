@@ -24,6 +24,7 @@ class BasePublisher():
             rospy.loginfo("locked camera frame to: %s", self.camera_frame)
 
         for detection in msg.detections:
+            # print(len(msg.detections), "detections received")
             if detection.id[0] == 0:
 
                 # create the transform message
