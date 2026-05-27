@@ -302,7 +302,7 @@ class CubeBundlePublisher():
                 odom.twist.twist.linear = Vector3(*v_cam)
                 odom.twist.twist.angular = Vector3(*omega_cam)
 
-                self.pub.publish(odom)
+        self.pub.publish(odom)
 
         # Update state for next iteration
         self.last_time = current_time

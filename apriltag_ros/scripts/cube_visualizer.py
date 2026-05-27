@@ -3,10 +3,9 @@
 import rospy
 import tf2_ros
 import tf2_geometry_msgs
-import numpy as np
 from nav_msgs.msg import Odometry
 from visualization_msgs.msg import Marker
-from geometry_msgs.msg import Pose, PoseStamped
+from geometry_msgs.msg import PoseStamped
 
 
 class CubeVisualizer:
@@ -15,7 +14,6 @@ class CubeVisualizer:
 
         # Parameters
         self.marker_topic = rospy.get_param("~marker_topic", "/cube_marker")
-        self.success_tolerance = rospy.get_param("~success_tolerance", 0.4)
         self.cube_size = rospy.get_param("~cube_size", 0.07)  # 7cm actual cube
         self.mesh_resource = rospy.get_param(
             "~mesh_resource", "package://apriltag_ros/meshes/model.obj"
@@ -33,16 +31,15 @@ class CubeVisualizer:
 
         # State
         self.current_odom = None
-        self.success_end_time = None
-        self.success_linger = rospy.get_param(
-            "~success_linger", 0.25
-        )  # seconds to keep text after success
 
         # Subscriber for actual cube
         rospy.Subscriber("/obj_odometry", Odometry, self.odom_callback)
 
         # Timer for markers (20Hz)
         self.timer = rospy.Timer(rospy.Duration(0.05), self.timer_callback)
+
+        # Clear any legacy SUCCESS text marker
+        self._delete_success_text_marker()
 
         rospy.loginfo(
             "Cube Visualizer Layered Initialized (Size: %.2fm)", self.cube_size
@@ -51,12 +48,14 @@ class CubeVisualizer:
     def odom_callback(self, msg):
         self.current_odom = msg
 
-    def get_rotation_distance(self, q1, q2):
-        q1 = q1 / np.linalg.norm(q1)
-        q2 = q2 / np.linalg.norm(q2)
-        d = np.abs(np.dot(q1, q2))
-        d = np.clip(d, 0, 1.0)
-        return 2.0 * np.arccos(d)
+    def _delete_success_text_marker(self):
+        m_text = Marker()
+        m_text.header.frame_id = self.reference_frame
+        m_text.header.stamp = rospy.Time.now()
+        m_text.ns = "success_text"
+        m_text.id = 4
+        m_text.action = Marker.DELETE
+        self.marker_pub.publish(m_text)
 
     def create_marker(self, ns, id, m_type, pose_p, pose_q, scale, color, mesh=""):
         m = Marker()
@@ -101,12 +100,10 @@ class CubeVisualizer:
                 goal_tf.transform.rotation.z,
                 goal_tf.transform.rotation.w,
             ]
-            # print("Goal Quaternion:", goal_q)
-            # Applying the visualization offset to move it away from the hand
             goal_p = [
-                goal_tf.transform.translation.x - 0.2,
-                goal_tf.transform.translation.y - 0.2,
-                goal_tf.transform.translation.z - 0.2,
+                goal_tf.transform.translation.x - 0.1,
+                goal_tf.transform.translation.y - 0.1,
+                goal_tf.transform.translation.z - 0.1,
             ]
         except (
             tf2_ros.LookupException,
@@ -144,7 +141,6 @@ class CubeVisualizer:
 
         # 3. Publish Actual Cube
         if actual_p is not None:
-            # Textured Mesh
             m_mesh = self.create_marker(
                 "actual_mesh",
                 0,
@@ -157,57 +153,8 @@ class CubeVisualizer:
             )
             self.marker_pub.publish(m_mesh)
 
-            # SUCCESS text marker
-            success = False
-            if goal_q is not None:
-                rot_dist = self.get_rotation_distance(actual_q, goal_q)
-                if rot_dist <= self.success_tolerance:
-                    success = True
-                    self.success_end_time = rospy.Time.now() + rospy.Duration(
-                        self.success_linger
-                    )
-
-            show_text = success or (
-                self.success_end_time is not None
-                and rospy.Time.now() < self.success_end_time
-            )
-
-            if show_text:
-                m_text = Marker()
-                m_text.header.frame_id = self.reference_frame
-                m_text.header.stamp = rospy.Time.now()
-                m_text.ns = "success_text"
-                m_text.id = 4
-                m_text.type = Marker.TEXT_VIEW_FACING
-                m_text.action = Marker.ADD
-                m_text.pose.position.x = actual_p[0]
-                m_text.pose.position.y = actual_p[1]
-                m_text.pose.position.z = actual_p[2] + 0.1
-                m_text.pose.orientation.x = actual_q[0]
-                m_text.pose.orientation.y = actual_q[1]
-                m_text.pose.orientation.z = actual_q[2]
-                m_text.pose.orientation.w = actual_q[3]
-                m_text.scale.z = 0.12
-                m_text.color.r = 0.0
-                m_text.color.g = 1.0
-                m_text.color.b = 0.0
-                m_text.color.a = 1.0
-                m_text.text = "SUCCESS!"
-                self.marker_pub.publish(m_text)
-            else:
-                self.success_end_time = None
-                m_text = Marker()
-                m_text.header.frame_id = self.reference_frame
-                m_text.header.stamp = rospy.Time.now()
-                m_text.ns = "success_text"
-                m_text.id = 4
-                m_text.type = Marker.TEXT_VIEW_FACING
-                m_text.action = Marker.DELETE
-                self.marker_pub.publish(m_text)
-
         # 4. Publish Goal Cube
         if goal_p is not None:
-            # Ghost Mesh
             m_gmesh = self.create_marker(
                 "goal_mesh",
                 2,

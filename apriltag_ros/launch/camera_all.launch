@@ -32,6 +32,8 @@
     <arg name="second_detections_image_topic" default="/tag_detections_image_cam2" />
     <arg unless="$(arg enable_second_camera)" name="cube_detections_topic" default="/tag_detections" />
     <arg if="$(arg enable_second_camera)" name="cube_detections_topic" default="$(arg merged_detections_topic)" />
+    <arg unless="$(arg enable_second_camera)" name="base_detections_topic" default="$(arg primary_detections_topic)" />
+    <arg if="$(arg enable_second_camera)" name="base_detections_topic" default="$(arg merged_detections_topic)" />
 
     <!-- 1. Primary RealSense (D435) -->
     <include file="$(find apriltag_ros)/launch/includes/realsense_infra_camera.launch">
@@ -100,11 +102,19 @@
         <param name="cam2_topic" value="$(arg second_detections_topic)" />
         <param name="output_topic" value="$(arg merged_detections_topic)" />
         <param name="output_frame" value="$(arg primary_camera_name)_infra1_optical_frame" />
+        <param name="extrinsic_update_mode" value="continuous" />
+        <param name="extrinsic_update_alpha" value="0.5" />
+        <param name="tag0_min_decision_margin" value="50.0" />
+        <param name="extrinsic_update_min_interval_sec" value="0.05" />
+        <param name="extrinsic_use_cube_tags" value="true" />
+        <param name="extrinsic_snap_trans_m" value="0.002" />
+        <param name="extrinsic_snap_rot_rad" value="0.05" />
+        <param name="cam2_max_age_sec" value="0.1" />
     </node>
 
-    <!-- 3. Base Publisher (Tag ID 0 to tag_frame) - primary camera only -->
+    <!-- 3. Base Publisher (Tag ID 0 to tag_frame) -->
     <node pkg="apriltag_ros" type="base_publisher.py" name="base_publisher" output="screen">
-        <param name="detections_topic" value="$(arg primary_detections_topic)" />
+        <param name="detections_topic" value="$(arg base_detections_topic)" />
     </node>
 
     <!-- 4. Cube Bundle Publisher -->
